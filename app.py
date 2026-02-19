@@ -6,6 +6,7 @@ Generates professional product ad creatives using Gemini 3 Pro Image (Nano Banan
 import io
 import os
 import base64
+import random
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
@@ -224,7 +225,7 @@ with col1:
     )
     if product_file:
         product_img = Image.open(product_file)
-        st.image(product_img, caption="Product Image", width='stretch')
+        st.image(product_img, caption="Product Image", use_container_width=True)
 
 with col2:
     st.markdown("""
@@ -241,7 +242,7 @@ with col2:
     )
     if logo_file:
         logo_img = Image.open(logo_file)
-        st.image(logo_img, caption="Company Logo", width='stretch')
+        st.image(logo_img, caption="Company Logo", use_container_width=True)
 
 with col3:
     st.markdown("""
@@ -264,6 +265,22 @@ with col3:
 # ──────────────────────────────────────────────
 def build_prompt(product_name: str) -> str:
     """Build a refined, professional prompt for ad creative generation."""
+
+    # Randomize surface/background for variety across generations
+    surfaces = [
+        "polished Italian Calacatta marble with soft white, beige, and warm golden-brown veins",
+        "rich warm travertine stone surface with honey and cream tones and natural pitting texture",
+        "elegant rose-gold veined marble with blush pink undertones and soft white swirls",
+        "luxurious Emperador dark marble with deep chocolate-brown and warm caramel veins",
+        "warm sandstone surface with natural golden-tan gradients and fine grain texture",
+        "polished onyx surface with warm amber, honey, and deep golden translucent layers",
+        "creamy Botticino marble with subtle beige veining and a warm ivory base",
+        "rich walnut wood surface with warm brown tones, natural grain patterns, and a satin polish",
+        "deep burgundy velvet draped surface with soft folds catching warm golden light",
+        "antique bronze-patina metal surface with warm copper-green tones and hammered texture",
+    ]
+    surface = random.choice(surfaces)
+
     return f"""You are a world-class advertising creative director and luxury product photographer.
 
 I am providing you with TWO reference images:
@@ -272,24 +289,29 @@ I am providing you with TWO reference images:
 
 Your task is to create a single, seamless, hyper-realistic, professional advertising image that looks like a premium magazine-quality product photoshoot.
 
-### CRITICAL — Natural Product Placement:
-- Do NOT simply cut-and-paste or overlay the product onto the background. You MUST re-render and re-light the product so it looks like it was **actually photographed in this scene**.
-- Place the product at a **natural 3/4 perspective angle** — slightly tilted, as if resting naturally on the surface. NEVER place it flat or perfectly straight-on.
+### ⚠️ ABSOLUTE RULE — Preserve Logo & Product EXACTLY:
+This is the MOST IMPORTANT instruction. Violating this rule makes the output useless:
+- The **company logo** (Image 2) must appear in the final image **exactly as provided** — same design, same colors, same text, same proportions. Do NOT redraw, redesign, modify, recolor, simplify, or artistically reinterpret the logo. Copy it faithfully.
+- The **product** (Image 1) must look **identical to the original photograph** — same shape, same colors, same patterns, same textures, same proportions, same details. Do NOT change, redesign, or reimagine the product's appearance in any way. The product in the final image should be instantly recognizable as the exact same item from the reference photo.
+- You may ONLY adjust the product's lighting and shadows to match the new scene — everything else about the product and logo must remain 100% faithful to the originals.
+
+### Natural Product Placement:
+- Place the product at a **natural 3/4 perspective angle** — slightly tilted, as if resting naturally on the surface.
 - The product must **interact realistically with the surface** — cast authentic soft shadows underneath and to one side, show subtle reflections on the surface beneath it, and match the scene's lighting direction.
-- The product should look like someone carefully placed it on a real surface and a photographer took a beautiful shot of it.
+- The product should look like someone carefully placed it on a real surface and a photographer took a beautiful shot of it — NOT like a cut-and-paste.
 
 ### Composition & Layout (top to bottom, ONE continuous image):
-- **Top**: Place the company logo prominently and naturally at the top of the image, centered.
+- **Top**: Place the company logo (EXACTLY as provided in Image 2, unchanged) prominently at the top of the image, centered.
 - **Below the logo**: Render the text '+91 9007706401 / +91 9875691517' in an elegant gold serif typeface, slightly smaller than the logo.
-- **Center**: Feature the product ("{product_name}") as the hero of the composition, placed at a natural angle on the surface. The product must be rendered with **razor-sharp detail and crisp edges** — preserve every texture, material finish, and fine detail from the original photo.
+- **Center**: Feature the product ("{product_name}") (EXACTLY as it appears in Image 1, unchanged) as the hero of the composition, placed at a natural angle on the surface.
 - **Bottom**: Render the product name "{product_name}" in an italic, elegant gold serif typeface at a **small, subtle size** — it should be noticeably smaller than the contact info text, acting as a discreet caption rather than a headline.
 
 ### Background & Surface (IMPORTANT):
-- Use a **warm, premium marble or natural stone surface** as the base — think polished Italian marble with soft beige, cream, and warm golden-brown veins
+- Use a **{surface}** as the base surface
 - The surface should have a subtle sheen/polish that catches the light naturally
-- The background should feel warm and inviting, NOT cold or dark — warm tones throughout
-- The marble surface should extend seamlessly from foreground to background with natural perspective
-- NO solid color backgrounds, NO dark/black backgrounds — always a textured premium surface
+- The background should feel warm and inviting — warm tones throughout
+- The surface should extend seamlessly from foreground to background with natural perspective
+- NO solid color backgrounds — always a textured premium surface
 
 ### Artistic Direction:
 - Warm, golden ambient studio lighting — soft directional light from the upper left creating gentle highlights
@@ -299,7 +321,7 @@ Your task is to create a single, seamless, hyper-realistic, professional adverti
 
 ### Product Clarity (CRITICAL):
 - The product MUST appear **tack-sharp, high-definition, and crystal clear** — no blur, haze, or softness
-- Preserve all original textures, grain, patterns, engravings, and material finishes from the reference photo
+- Preserve ALL original textures, grain, patterns, engravings, colors, and material finishes from the reference photo — DO NOT alter any visual detail of the product
 - Use focused studio-style lighting on the product to enhance sharpness and bring out fine details
 - The product should look like it was photographed with a high-end macro lens at peak sharpness
 
@@ -312,7 +334,7 @@ Generate the final image now."""
 st.markdown("")  # spacing
 _, btn_col, _ = st.columns([1, 2, 1])
 with btn_col:
-    generate = st.button("✨  Generate Ad Creative", width='stretch')
+    generate = st.button("✨  Generate Ad Creative", use_container_width=True)
 
 if generate:
     # ── Validation ──
@@ -395,7 +417,10 @@ if generate:
                     </div>
                     """, unsafe_allow_html=True)
 
-                    st.image(generated_image, caption=f"Ad Creative — {product_name}", width='stretch')
+                    # Display at a reasonable size (centered column)
+                    _, img_col, _ = st.columns([1, 1.5, 1])
+                    with img_col:
+                        st.image(generated_image, caption=f"Ad Creative — {product_name}", use_container_width=True)
 
                     # ── Download button ──
                     buf = io.BytesIO()
@@ -407,7 +432,7 @@ if generate:
                         data=buf,
                         file_name=f"ad_creative_{product_name.lower().replace(' ', '_')}.png",
                         mime="image/png",
-                        width='stretch',
+                        use_container_width=True,
                     )
 
                     if response_text:
